@@ -1,0 +1,33 @@
+[
+  {
+    "timestamp": "2025-07-27T17:07:00.401050",
+    "summary": " Aditya is going to assign the task to a crumbled Hassan rajual Kumar so ikramoon Hassan will handle all the front end and Raju Kumar will all handle the backend and I will handle the Chrome extension parts . Grandma husband will complete his work till Monday .",
+    "action_items": [
+      {
+        "task": "Handle all the front end",
+        "owner": "ikramoon Hassan",
+        "deadline": "Sunday"
+      },
+      {
+        "task": "Handle all the backend",
+        "owner": "Raju Kumar",
+        "deadline": "Sunday"
+      },
+      {
+        "task": "Work on Chrome extension parts",
+        "owner": "Aditya",
+        "deadline": "Today"
+      },
+      {
+        "task": "Complete his work",
+        "owner": "Grandma husband",
+        "deadline": "Monday"
+      },
+      {
+        "task": "Complete the work",
+        "owner": "Aditya",
+        "deadline": "2015 July 2025"
+      }
+    ]
+  }
+]
