@@ -4,4 +4,4 @@ requests
 python-multipart
 transformers
 torch
-
+openai>=1.0.0

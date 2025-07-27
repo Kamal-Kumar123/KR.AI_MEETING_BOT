@@ -289,3 +289,8 @@ async def transcribe(file: UploadFile = File(...)):
 
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": f"Internal Server Error: {str(e)}"})
+
+if __name__ == "__main__":
+    import uvicorn
+    port = int(os.environ.get("PORT", 10000))  # use Render's PORT env if available
+    uvicorn.run("main:app", host="0.0.0.0", port=port)
