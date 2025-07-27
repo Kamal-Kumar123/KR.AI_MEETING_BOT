@@ -1,0 +1,36 @@
+{
+  "manifest_version": 3,
+  "name": "Zoom Meeting Assistant",
+  "version": "1.0",
+  "description": "Transcribes and logs Zoom meetings",
+  "permissions": [
+    "storage",
+    "identity",
+    "activeTab",
+    "scripting"
+  ],
+  "oauth2": {
+    "client_id": "v8y_XZacQVGAu1siRxC63Q",
+    "scopes": [
+      "https://api.zoom.us/meeting:read",
+      "https://api.zoom.us/meeting:write",
+      "https://api.zoom.us/user:read"
+    ]
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": "icon.png"
+  },
+  "background": {
+    "service_worker": "background.js"
+  },
+  "content_scripts": [
+    {
+      "matches": ["*://*.zoom.us/*"],
+      "js": ["contentScript.js"]
+    }
+  ],
+  "host_permissions": [
+    "https://api.zoom.us/*"
+  ]
+}
