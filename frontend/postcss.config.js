@@ -5,12 +5,19 @@
 //     require('autoprefixer'),
 //   ],
 // };
-const tailwindcss = require('@tailwindcss/postcss');
+// const tailwindcss = require('@tailwindcss/postcss');
 
+// module.exports = {
+//   plugins: [
+//     require('postcss-import'),
+//     tailwindcss(),
+//     require('autoprefixer'),
+//   ],
+// };
 module.exports = {
-  plugins: [
-    require('postcss-import'),
-    tailwindcss(),
-    require('autoprefixer'),
-  ],
+  plugins: {
+    'postcss-import': {},
+    'tailwindcss': {},
+    'autoprefixer': {},
+  },
 };
