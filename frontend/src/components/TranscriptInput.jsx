@@ -1,6 +1,8 @@
 import React, { useState } from 'react';
 import axios from 'axios';
 
+const BASE_URL="https://kr-ai-meeting-bot.onrender.com"
+
 const TranscriptInput = () => {
   const [file, setFile] = useState(null);
   const [transcript, setTranscript] = useState('');
@@ -21,10 +23,10 @@ const TranscriptInput = () => {
       if (file) {
         const formData = new FormData();
         formData.append('file', file);
-        res = await axios.post('http://localhost:8000/transcribe', formData);
+        res = await axios.post(`${BASE_URL}/transcribe`, formData);
       } else {
         //  If no file, just use backend's saved meeting.txt from Chrome Extension
-        res = await axios.post('http://localhost:8000/transcribe/from-file');
+        res = await axios.post(`${BASE_URL}/transcribe/from-file`);
       }
 
       setTranscript(res.data.transcript || '');
