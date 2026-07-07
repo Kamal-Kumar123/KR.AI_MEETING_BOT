@@ -186,16 +186,42 @@ def generate_ai_insights(transcript: str) -> dict:
     if not _ollama_available():
         return default
 
-    prompt = f"""Analyze this meeting transcript and return ONLY valid JSON with keys:
-title, bullet_summary (array), action_items (array of {{task, owner, deadline}}),
-key_decisions (array), discussion_points (array), open_questions (array),
-risks (array), next_steps (array), keywords (array).
+    prompt = f"""You are analyzing a meeting transcript. Extract ONLY information that is
+explicitly stated in the transcript. Do NOT invent, assume, guess, or infer anything
+that was not actually said.
+
+Return ONLY valid JSON with these keys:
+- "title": a short descriptive title based on what was actually discussed
+- "bullet_summary": array of the main points that were actually said
+- "action_items": array of objects {{"task", "owner", "deadline"}}. An action item is a
+  FUTURE task that someone commits to do AFTER this meeting. Include ONLY such future
+  commitments that were EXPLICITLY stated. Do NOT list past achievements, completed work,
+  experiences, or anything the speaker has ALREADY done (e.g. "worked on X", "published Y",
+  "attended Z" are NOT action items). A self-introduction or a talk about past work has NO
+  action items — return an empty array []. Never invent a deadline — if none was stated use
+  "Not specified". Never invent an owner — if unclear use "Unassigned".
+- "key_decisions": array of decisions explicitly made (empty [] if none)
+- "discussion_points": array of topics actually discussed
+- "open_questions": array (empty [] if none)
+- "risks": array (empty [] if none)
+- "next_steps": array of steps explicitly mentioned (empty [] if none)
+- "keywords": array of key terms that appear in the transcript
+
+IMPORTANT: If a category was not explicitly discussed, return an empty array [] for it.
+Do NOT fill categories with plausible-sounding guesses. It is correct and expected for
+action_items, key_decisions, next_steps, risks, and open_questions to be empty for a talk
+or self-introduction.
 
 Transcript:
 {transcript[:6000]}
 """
     try:
-        raw = _ollama_chat("You are a meeting intelligence assistant. Return JSON only.", prompt)
+        raw = _ollama_chat(
+            "You are a precise meeting intelligence assistant. You only extract facts that are "
+            "explicitly present in the transcript and never fabricate tasks, owners, deadlines, "
+            "or decisions. Return JSON only.",
+            prompt,
+        )
         parsed = _parse_json_object(raw)
         default.update({k: parsed.get(k, default[k]) for k in default if k in parsed})
         if parsed.get("title"):
@@ -250,7 +276,11 @@ def process_meeting_pipeline(db: Session, meeting_id: str) -> None:
             pass
 
         meeting.duration_seconds = int(result.get("duration") or 0)
-        db.merge(
+        # Replace any existing transcript so re-processing a meeting works
+        # (meeting_id is unique — we can't just insert a second row).
+        db.query(Transcript).filter(Transcript.meeting_id == meeting.id).delete()
+        db.flush()
+        db.add(
             Transcript(
                 meeting_id=meeting.id,
                 full_text=transcript_text,
@@ -271,7 +301,10 @@ def process_meeting_pipeline(db: Session, meeting_id: str) -> None:
         insights = generate_ai_insights(transcript_text)
         meeting.title = insights.get("title") or meeting.title
 
-        db.merge(
+        # Replace any existing summary (re-processing) — meeting_id is unique.
+        db.query(Summary).filter(Summary.meeting_id == meeting.id).delete()
+        db.flush()
+        db.add(
             Summary(
                 meeting_id=meeting.id,
                 executive_summary=insights["summary"],
