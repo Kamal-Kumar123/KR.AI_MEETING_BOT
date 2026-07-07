@@ -1,34 +1,14 @@
-# Python
 venv/
 meeting_bot/
-__pycache__/
-*.pyc
-
-# Node
 node_modules/
+backend/chroma_data/
+apps/web/node_modules/
+apps/web/.next/
 extension/node_modules/
 extension/dist/
-
-# Env / secrets — never commit these
+__pycache__/
+*.pyc
 .env
-*.env
-!*.env.example
 apps/api/.env
-
-# Build outputs
-frontend/build/
-backend/frontend-build/
-
-# Local data / runtime artifacts
 apps/api/local_recordings/
 apps/api/krai_local.db
-*.db
-backend/chroma_data/
-backend/transcripts/
-backend/meeting_history.json
-backend/meeting_store*.json
-
-# OS / editor
-.DS_Store
-Thumbs.db
-._*
