@@ -30,7 +30,7 @@ async function startPageMicCapture(): Promise<{ ok: boolean; error?: string }> {
     const mimeType = MediaRecorder.isTypeSupported("audio/webm;codecs=opus")
       ? "audio/webm;codecs=opus"
       : "audio/webm";
-    micRecorder = new MediaRecorder(micStream, { mimeType, audioBitsPerSecond: 128000 });
+    micRecorder = new MediaRecorder(micStream, { mimeType, audioBitsPerSecond: 48000 });
     micRecorder.ondataavailable = (e) => {
       if (e.data.size > 0) micChunks.push(e.data);
     };
