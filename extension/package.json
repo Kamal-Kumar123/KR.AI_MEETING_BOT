@@ -1,0 +1,16 @@
+{
+  "name": "@krai/extension",
+  "version": "2.0.0",
+  "private": true,
+  "scripts": {
+    "build": "node scripts/build.js",
+    "validate": "node scripts/validate.js",
+    "test": "npm run build && npm run validate",
+    "watch": "tsc -w"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.2.2",
+    "esbuild": "^0.21.0",
+    "typescript": "^5.4.0"
+  }
+}
