@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>KRAI Meeting Assistant</title>
+    <style>
+      * { box-sizing: border-box; }
+      body {
+        font-family: system-ui, sans-serif;
+        width: 340px;
+        margin: 0;
+        padding: 16px;
+        background: #0b1020;
+        color: #e8eefc;
+      }
+      h2 { margin: 0 0 4px; font-size: 1.15rem; }
+      .muted { color: #9aa8c7; font-size: 12px; }
+      .error { color: #f87171; font-size: 12px; margin-top: 8px; min-height: 16px; }
+      .success { color: #86efac; font-size: 12px; margin-top: 8px; }
+      input {
+        width: 100%;
+        padding: 10px;
+        margin-top: 8px;
+        border-radius: 8px;
+        border: 1px solid #334;
+        background: #121a2f;
+        color: white;
+        font-size: 13px;
+      }
+      button {
+        width: 100%;
+        margin-top: 8px;
+        padding: 10px;
+        border: 0;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .primary { background: #6d5efc; color: white; }
+      .danger { background: #ef4444; color: white; }
+      .secondary { background: #1e293b; color: #e8eefc; border: 1px solid #334; }
+      .google { background: white; color: #1f2937; }
+      .link {
+        background: none;
+        border: none;
+        color: #93c5fd;
+        font-size: 12px;
+        font-weight: normal;
+        margin-top: 6px;
+        padding: 4px;
+        width: auto;
+        text-decoration: underline;
+        cursor: pointer;
+      }
+      .tabs {
+        display: flex;
+        gap: 4px;
+        margin: 12px 0 8px;
+        background: #121a2f;
+        border-radius: 8px;
+        padding: 4px;
+      }
+      .tab {
+        flex: 1;
+        padding: 8px;
+        border: none;
+        border-radius: 6px;
+        background: transparent;
+        color: #9aa8c7;
+        cursor: pointer;
+        font-size: 12px;
+        font-weight: 600;
+        margin: 0;
+      }
+      .tab.active { background: #6d5efc; color: white; }
+      .hidden { display: none !important; }
+      #timer {
+        font-size: 28px;
+        font-weight: bold;
+        margin: 12px 0;
+        font-variant-numeric: tabular-nums;
+        letter-spacing: 1px;
+      }
+      .recording { color: #f87171; }
+      .paused { color: #fbbf24; }
+      .user-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 8px;
+        padding-bottom: 8px;
+        border-bottom: 1px solid rgba(255,255,255,0.08);
+      }
+      .user-email { font-size: 12px; color: #c4cff0; max-width: 200px; overflow: hidden; text-overflow: ellipsis; }
+      .logout-btn {
+        width: auto;
+        margin: 0;
+        padding: 6px 10px;
+        font-size: 11px;
+        background: #1e293b;
+        color: #9aa8c7;
+        border: 1px solid #334;
+      }
+      .controls-row { display: flex; gap: 6px; }
+      .controls-row button { flex: 1; margin-top: 8px; }
+      .footer { margin-top: 12px; font-size: 11px; color: #6b7a99; line-height: 1.4; }
+      .capture-sources {
+        display: flex;
+        gap: 6px;
+        margin: 8px 0 4px;
+        flex-wrap: wrap;
+      }
+      .source-pill {
+        font-size: 10px;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: #1e293b;
+        color: #6b7a99;
+        border: 1px solid #334;
+      }
+      .source-pill.active {
+        background: #14532d;
+        color: #86efac;
+        border-color: #166534;
+      }
+      .source-pill.inactive {
+        background: #3f1d1d;
+        color: #fca5a5;
+        border-color: #7f1d1d;
+      }
+    </style>
+  </head>
+  <body>
+    <!-- AUTH VIEW -->
+    <div id="authView">
+      <h2>KRAI Assistant</h2>
+      <p class="muted">Sign in to record and upload meetings</p>
+
+      <div class="tabs">
+        <button id="tabLogin" class="tab active" type="button">Login</button>
+        <button id="tabSignup" class="tab" type="button">Sign Up</button>
+      </div>
+
+      <div id="loginForm">
+        <input id="loginEmail" type="email" placeholder="Email" autocomplete="email" />
+        <input id="loginPassword" type="password" placeholder="Password" autocomplete="current-password" />
+        <button id="loginBtn" class="primary" type="button">Login</button>
+        <button id="forgotBtn" class="link" type="button">Forgot password?</button>
+      </div>
+
+      <div id="signupForm" class="hidden">
+        <input id="signupName" type="text" placeholder="Full name (optional)" />
+        <input id="signupEmail" type="email" placeholder="Email" autocomplete="email" />
+        <input id="signupPassword" type="password" placeholder="Password (min 8 chars)" autocomplete="new-password" />
+        <button id="signupBtn" class="primary" type="button">Create Account</button>
+      </div>
+
+      <div id="forgotForm" class="hidden">
+        <p class="muted">Enter your email and we'll send reset instructions when email is configured.</p>
+        <input id="forgotEmail" type="email" placeholder="Email" />
+        <button id="forgotSubmitBtn" class="primary" type="button">Send Reset Link</button>
+        <button id="forgotBackBtn" class="link" type="button">← Back to login</button>
+      </div>
+
+      <button id="googleBtn" class="google" type="button">Login with Google</button>
+      <p id="authMsg" class="error"></p>
+    </div>
+
+    <!-- MAIN VIEW (after login) -->
+    <div id="mainView" class="hidden">
+      <div class="user-row">
+        <span id="userEmail" class="user-email"></span>
+        <button id="logoutBtn" class="logout-btn" type="button">Logout</button>
+      </div>
+
+      <h2>KRAI Assistant</h2>
+      <p id="platform" class="muted">Platform: —</p>
+      <p id="status" class="muted">Status: idle</p>
+      <div id="timer">00:00</div>
+
+      <div id="captureSources" class="capture-sources hidden">
+        <span id="srcTab" class="source-pill">Tab (others)</span>
+        <span id="srcMic" class="source-pill">Your mic</span>
+      </div>
+
+      <button id="startBtn" class="primary" type="button">Start Recording</button>
+      <div class="controls-row">
+        <button id="pauseBtn" class="secondary" type="button">Pause</button>
+        <button id="resumeBtn" class="secondary" type="button">Resume</button>
+      </div>
+      <button id="stopBtn" class="danger" type="button">Stop & Upload</button>
+
+      <button id="settingsLink" class="link" type="button">Settings</button>
+      <p id="mainMsg" class="error"></p>
+      <p class="footer">One click records your voice (via Meet) + others in the call (tab audio). No extra mic permission needed on Google Meet.</p>
+    </div>
+
+    <script src="popup/popup.js"></script>
+  </body>
+</html>
