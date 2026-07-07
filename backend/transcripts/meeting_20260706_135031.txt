@@ -1,0 +1,1 @@
+We decided to use ChromaDB for memory. Deadline is next Monday.
