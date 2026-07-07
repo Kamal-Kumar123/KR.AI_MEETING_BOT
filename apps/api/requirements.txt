@@ -1,0 +1,36 @@
+fastapi>=0.115.0
+uvicorn[standard]>=0.30.0
+sqlalchemy>=2.0.0
+alembic>=1.13.0
+psycopg2-binary>=2.9.9
+pydantic[email]>=2.0.0
+email-validator>=2.0.0
+pydantic-settings>=2.0.0
+python-jose[cryptography]>=3.3.0
+passlib[bcrypt]>=1.7.4
+bcrypt>=4.0.0
+python-multipart>=0.0.9
+boto3>=1.34.0
+httpx>=0.27.0
+slowapi>=0.1.9
+faster-whisper>=1.0.0
+transformers>=4.41,<5.0
+torch
+# Speaker diarization (optional but recommended for speaker labels).
+# On Windows install webrtcvad-wheels first to avoid needing a C++ compiler:
+#   pip install webrtcvad-wheels librosa
+#   pip install --no-deps resemblyzer
+webrtcvad-wheels>=2.0.14
+librosa>=0.10.0
+resemblyzer>=0.1.3
+sentence-transformers>=3.0.0,<5.0
+scikit-learn>=1.3.0
+chromadb>=0.5.0
+requests>=2.31.0
+celery>=5.3.0
+redis>=5.0.0
+google-auth>=2.29.0
+reportlab>=4.0.0
+pytest>=8.0.0
+pytest-asyncio>=0.23.0
+httpx>=0.27.0
