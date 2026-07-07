@@ -204,7 +204,7 @@ async function startCapture(
 
   mediaRecorder = new MediaRecorder(captureStream, {
     mimeType,
-    audioBitsPerSecond: 128000,
+    audioBitsPerSecond: 48000,
   });
   mediaRecorder.ondataavailable = (e) => {
     if (e.data.size > 0) chunks.push(e.data);
