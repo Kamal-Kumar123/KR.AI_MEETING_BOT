@@ -1,0 +1,235 @@
+[
+  {
+    "timestamp": "2025-07-27T17:07:00.401050",
+    "summary": " Aditya is going to assign the task to a crumbled Hassan rajual Kumar so ikramoon Hassan will handle all the front end and Raju Kumar will all handle the backend and I will handle the Chrome extension parts . Grandma husband will complete his work till Monday .",
+    "action_items": [
+      {
+        "task": "Handle all the front end",
+        "owner": "ikramoon Hassan",
+        "deadline": "Sunday"
+      },
+      {
+        "task": "Handle all the backend",
+        "owner": "Raju Kumar",
+        "deadline": "Sunday"
+      },
+      {
+        "task": "Work on Chrome extension parts",
+        "owner": "Aditya",
+        "deadline": "Today"
+      },
+      {
+        "task": "Complete his work",
+        "owner": "Grandma husband",
+        "deadline": "Monday"
+      },
+      {
+        "task": "Complete the work",
+        "owner": "Aditya",
+        "deadline": "2015 July 2025"
+      }
+    ]
+  },
+  {
+    "meeting_id": "4920b86e9a46",
+    "timestamp": "2026-06-19T17:25:57.696064",
+    "mode": "standalone",
+    "series_id": "standalone-20260619172552026456",
+    "use_rag": false,
+    "source": "upload",
+    "transcript": "We need to finish the UI by Friday. John will handle backend deployment.",
+    "summary": "We need to finish the UI by Friday. John will handle backend deployment.",
+    "action_items": [],
+    "share_url": "http://localhost:3000/?meeting_id=4920b86e9a46"
+  },
+  {
+    "meeting_id": "b63d6d50f521",
+    "timestamp": "2026-07-06T12:32:16.366359",
+    "mode": "standalone",
+    "series_id": "standalone-20260706123149101273",
+    "use_rag": false,
+    "source": "upload",
+    "transcript": "The stale smell of old beer lingers.\nIt takes heat to bring out the odor.\nA cold dip restores health and zest.\nA salt pickle tastes fine with ham.\nTacos al pastor are my favorite.\nA zestful food is the hot cross bun.",
+    "summary": "a cold dip restores health and zest . a salt pickle tastes fine with ham . a zestful food is the hot cross bun .",
+    "action_items": [],
+    "share_url": "http://localhost:3000/?meeting_id=b63d6d50f521"
+  },
+  {
+    "meeting_id": "9e17e8e3b839",
+    "timestamp": "2026-07-06T12:57:32.956012",
+    "mode": "standalone",
+    "series_id": "standalone-20260706125520258314",
+    "use_rag": false,
+    "source": "upload",
+    "transcript": "The stale smell of old beer lingers.\nIt takes heat to bring out the odor.\nA cold dip restores health and zest.\nA salt pickle tastes fine with ham.\nTacos al pastor are my favorite.\nA zestful food is the hot cross bun.",
+    "summary": "a cold dip restores health and zest . a salt pickle tastes fine with ham . a zestful food is the hot cross bun .",
+    "action_items": [
+      {
+        "task": "Investigate and eliminate stale odors in meeting room",
+        "owner": "Unassigned",
+        "deadline": "Not specified"
+      },
+      {
+        "task": "Explore methods to make meetings more engaging and stimulating",
+        "owner": "Unassigned",
+        "deadline": "Not specified"
+      },
+      {
+        "task": "Research the health benefits of cold dips",
+        "owner": "Unassigned",
+        "deadline": "Not specified"
+      },
+      {
+        "task": "Explore possibilities for pairing salt pickles with ham",
+        "owner": "Unassigned",
+        "deadline": "Not specified"
+      },
+      {
+        "task": "Investigate the origin and preparation of Tacos al pastor",
+        "owner": "Unassigned",
+        "deadline": "Not specified"
+      },
+      {
+        "task": "Research the history and characteristics of hot cross buns",
+        "owner": "Unassigned",
+        "deadline": "Not specified"
+      }
+    ],
+    "share_url": "http://localhost:3000/?meeting_id=9e17e8e3b839"
+  },
+  {
+    "meeting_id": "5b429713aaa7",
+    "timestamp": "2026-07-06T13:48:57.888691",
+    "mode": "standalone",
+    "series_id": "standalone-20260706134738086478",
+    "use_rag": false,
+    "source": "upload",
+    "transcript": "Team standup: Alice will finish the API by Friday. Bob owns the frontend demo.",
+    "summary": "Team standup: Alice will finish the API by Friday. Bob owns the frontend demo.",
+    "action_items": [
+      {
+        "task": "Finish the API",
+        "owner": "Alice",
+        "deadline": "Friday"
+      },
+      {
+        "task": "Frontend demo",
+        "owner": "Bob",
+        "deadline": "Not specified"
+      }
+    ],
+    "share_url": "http://localhost:3000/?meeting_id=5b429713aaa7"
+  },
+  {
+    "meeting_id": "ec291999b7ec",
+    "timestamp": "2026-07-06T13:49:29.482483",
+    "mode": "standalone",
+    "series_id": "standalone-20260706134900932176",
+    "use_rag": false,
+    "source": "upload",
+    "transcript": "Team standup: Alice will finish the API by Friday. Bob owns the frontend demo.",
+    "summary": "Team standup: Alice will finish the API by Friday. Bob owns the frontend demo.",
+    "action_items": [
+      {
+        "task": "Finish the API",
+        "owner": "Alice",
+        "deadline": "Friday"
+      },
+      {
+        "task": "Frontend demo",
+        "owner": "Bob",
+        "deadline": "Not specified"
+      }
+    ],
+    "share_url": "http://localhost:3000/?meeting_id=ec291999b7ec"
+  },
+  {
+    "meeting_id": "5a66bd383aa8",
+    "timestamp": "2026-07-06T13:50:04.483154",
+    "mode": "standalone",
+    "series_id": "standalone-20260706134931778464",
+    "use_rag": false,
+    "source": "extension",
+    "transcript": "Sprint planning: Kamal will deploy backend. Aditya will test extension.",
+    "summary": "Sprint planning: Kamal will deploy backend. Aditya will test extension.",
+    "action_items": [
+      {
+        "task": "Deploy backend",
+        "owner": "Kamal",
+        "deadline": "Not specified"
+      },
+      {
+        "task": "Test extension",
+        "owner": "Aditya",
+        "deadline": "Not specified"
+      }
+    ],
+    "share_url": "http://localhost:3000/?meeting_id=5a66bd383aa8"
+  },
+  {
+    "meeting_id": "e3d819baffcd",
+    "timestamp": "2026-07-06T13:50:31.274507",
+    "mode": "connected",
+    "series_id": "test-series-smoke",
+    "use_rag": true,
+    "source": "upload",
+    "transcript": "We decided to use ChromaDB for memory. Deadline is next Monday.",
+    "summary": "We decided to use ChromaDB for memory. Deadline is next Monday.",
+    "action_items": [
+      {
+        "task": "Implement ChromaDB for memory",
+        "owner": "Unassigned",
+        "deadline": "Next Monday"
+      }
+    ],
+    "share_url": "http://localhost:3000/?meeting_id=e3d819baffcd"
+  },
+  {
+    "meeting_id": "5f1d707ac714",
+    "timestamp": "2026-07-06T23:35:44.556710",
+    "mode": "connected",
+    "series_id": "c149f03fda2041a0bbebb86f5bb32696",
+    "use_rag": true,
+    "source": "upload",
+    "transcript": "Sprint planning: Kamal will deploy backend. Aditya will test extension.",
+    "summary": "Sprint planning: Kamal will deploy backend. Aditya will test extension.",
+    "action_items": [],
+    "share_url": "http://localhost:3000/?meeting_id=5f1d707ac714"
+  },
+  {
+    "meeting_id": "8aaff6dfaa78",
+    "timestamp": "2026-07-06T23:36:17.389146",
+    "mode": "standalone",
+    "series_id": "standalone-20260706233613059037",
+    "use_rag": false,
+    "source": "upload",
+    "transcript": "Sprint planning: Kamal will deploy backend. Aditya will test extension.",
+    "summary": "Sprint planning: Kamal will deploy backend. Aditya will test extension.",
+    "action_items": [],
+    "share_url": "http://localhost:3000/?meeting_id=8aaff6dfaa78"
+  },
+  {
+    "meeting_id": "18895e8cf758",
+    "timestamp": "2026-07-06T23:37:12.831914",
+    "mode": "standalone",
+    "series_id": "standalone-20260706233708341404",
+    "use_rag": false,
+    "source": "upload",
+    "transcript": "Sprint planning: Kamal will deploy backend. Aditya will test extension.",
+    "summary": "Sprint planning: Kamal will deploy backend. Aditya will test extension.",
+    "action_items": [],
+    "share_url": "http://localhost:3000/?meeting_id=18895e8cf758"
+  },
+  {
+    "meeting_id": "e98e60771457",
+    "timestamp": "2026-07-07T01:30:14.024004",
+    "mode": "standalone",
+    "series_id": "standalone-20260707013009526180",
+    "use_rag": false,
+    "source": "upload",
+    "transcript": "Sprint planning: Kamal will deploy backend. Aditya will test extension.",
+    "summary": "Sprint planning: Kamal will deploy backend. Aditya will test extension.",
+    "action_items": [],
+    "share_url": "http://localhost:3000/?meeting_id=e98e60771457"
+  }
+]
