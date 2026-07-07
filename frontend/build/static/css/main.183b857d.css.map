@@ -1,0 +1,1 @@
+{"version":3,"file":"static/css/main.183b857d.css","mappings":"AAAA,KACE,4BACF,CAEA,iBACE,kBAAmB,CACnB,gBACF","sources":["index.css"],"sourcesContent":["body {\n  font-family: 'Inter', sans-serif;\n}\n\n.border-gradient {\n  border-style: solid;\n  border-width: 4px;\n}\n"],"names":[],"sourceRoot":""}
