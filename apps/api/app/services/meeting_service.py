@@ -3,6 +3,43 @@ from sqlalchemy.orm import Session
 from app.db.models import Meeting
 
 
+def _as_str_list(value) -> list[str]:
+    """Coerce a stored list into a list of clean strings.
+
+    The local LLM (Ollama) sometimes returns objects like {"task": ..., "owner":
+    ...} inside fields that the API contract declares as list[str]. Flatten those
+    so response serialization never fails with a validation error.
+    """
+    if not value:
+        return []
+    out: list[str] = []
+    for item in value:
+        if isinstance(item, str):
+            text = item
+        elif isinstance(item, dict):
+            main = (
+                item.get("task")
+                or item.get("text")
+                or item.get("decision")
+                or item.get("point")
+                or item.get("question")
+                or item.get("step")
+                or item.get("risk")
+            )
+            parts = [str(main)] if main else []
+            if item.get("owner"):
+                parts.append(f"- {item['owner']}")
+            if item.get("deadline"):
+                parts.append(f"(by {item['deadline']})")
+            text = " ".join(parts) if parts else str(item)
+        else:
+            text = str(item)
+        text = text.strip()
+        if text:
+            out.append(text)
+    return out
+
+
 def meeting_to_response(meeting: Meeting, include_transcript: bool = True) -> dict:
     transcript_text = None
     transcript_segments = []
@@ -15,13 +52,13 @@ def meeting_to_response(meeting: Meeting, include_transcript: bool = True) -> di
         summary = {
             "executive_summary": meeting.summary.executive_summary,
             "detailed_summary": meeting.summary.detailed_summary,
-            "bullet_summary": meeting.summary.bullet_summary or [],
-            "key_decisions": meeting.summary.key_decisions or [],
-            "discussion_points": meeting.summary.discussion_points or [],
-            "open_questions": meeting.summary.open_questions or [],
-            "risks": meeting.summary.risks or [],
-            "next_steps": meeting.summary.next_steps or [],
-            "keywords": meeting.summary.keywords or [],
+            "bullet_summary": _as_str_list(meeting.summary.bullet_summary),
+            "key_decisions": _as_str_list(meeting.summary.key_decisions),
+            "discussion_points": _as_str_list(meeting.summary.discussion_points),
+            "open_questions": _as_str_list(meeting.summary.open_questions),
+            "risks": _as_str_list(meeting.summary.risks),
+            "next_steps": _as_str_list(meeting.summary.next_steps),
+            "keywords": _as_str_list(meeting.summary.keywords),
         }
 
     return {
