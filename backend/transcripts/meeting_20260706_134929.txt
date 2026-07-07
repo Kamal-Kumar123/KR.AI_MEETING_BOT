@@ -1,0 +1,1 @@
+Team standup: Alice will finish the API by Friday. Bob owns the frontend demo.
