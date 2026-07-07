@@ -270,10 +270,12 @@ async function stopRecording() {
   session.captureMode = undefined;
   await saveSession(session);
 
-  const merged = base64ToBlob(stopRes.base64, stopRes.type || "audio/webm");
+  const mergedType = stopRes.type || "audio/webm";
+  const merged = base64ToBlob(stopRes.base64, mergedType);
   if (merged.size < 1000) {
     throw new Error("Recording too short or empty. Speak for at least 15 seconds, then try again.");
   }
+  const fileExt = mergedType.includes("wav") ? "wav" : "webm";
 
   const meeting = await apiFetch("/api/v1/meetings", {
     method: "POST",
@@ -285,7 +287,7 @@ async function stopRecording() {
   });
 
   const form = new FormData();
-  form.append("file", merged, "recording.webm");
+  form.append("file", merged, `recording.${fileExt}`);
   form.append("meeting_id", meeting.id);
   form.append("platform", platform);
   form.append("meeting_url", meetingUrl);
