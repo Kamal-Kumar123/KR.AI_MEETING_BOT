@@ -1,0 +1,1 @@
+Sprint planning: Kamal will deploy backend. Aditya will test extension.
