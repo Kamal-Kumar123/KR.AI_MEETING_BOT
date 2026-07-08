@@ -1,6 +1,6 @@
 export const DEFAULT_CONFIG = {
-  API_URL: "http://localhost:8000",
-  FRONTEND_URL: "http://localhost:3000",
+  API_URL: "https://kr-ai-meeting-bot-api.onrender.com",
+  FRONTEND_URL: "https://krai-omega.vercel.app",
   CHUNK_MS: 45000,
 };
 
