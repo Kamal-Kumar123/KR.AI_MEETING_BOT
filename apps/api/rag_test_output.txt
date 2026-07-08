@@ -1,0 +1,48 @@
+﻿
+========================================================================
+RAG SERIES TEST ù series_id: rag-autotest-1783495451
+========================================================================
+User: rag-autotest@krai.local
+Chroma chunks before test: 0
+
+========================================================================
+MEETING 1/3 ù RAG Test ù Kickoff
+========================================================================
+
+--- Transcript (input) ---
+Hello team. This is meeting one for Project Phoenix. We approved a total budget of fifty thousand dollars for this quarter. Kamal Kumar will lead the backend work. No task deadlines are assigned in this kickoff call.
+
+--- RAG context retrieved (before processing) ---
+(none ù first meeting in series or index empty)
+
+--- Running finalize_meeting_insights ---
+
+--- Output ---
+Status:           ready
+rag_context_used: False
+Chroma chunks:    2 (meetings indexed: 1)
+
+Summary:
+Hello team. This is meeting one for Project Phoenix. We approved a total budget of fifty thousand dollars for this quarter. Kamal Kumar will lead the backend work. No task deadlines are assigned in this kickoff call.
+
+Action items:
+  (none)
+python.exe : Traceback (most recent call last):
+At C:\Users\kamal\AppData\Local\Temp\ps-script-9fdee5b4-64f3-49be-8175-b2cbef23631a.ps1:109 char:1
++ & "C:\Users\kamal\Desktop\KR.AI_MEETING_BOT\meeting_bot\Scripts\pytho ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (Traceback (most recent call last)::String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+  File "C:\Users\kamal\Desktop\KR.AI_MEETING_BOT\apps\api\scripts\test_rag_series.py", line 247, in <module>
+    main()
+  File "C:\Users\kamal\Desktop\KR.AI_MEETING_BOT\apps\api\scripts\test_rag_series.py", line 243, in main
+    raise SystemExit(run(args.series, args.keep))
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\kamal\Desktop\KR.AI_MEETING_BOT\apps\api\scripts\test_rag_series.py", line 196, in run
+    print("\n[PASS] Meeting processed OK")
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Program Files\Python311\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2705' in position 2: character maps to <undefined>
