@@ -1,7 +1,12 @@
+look i don't want ki company level or start up level project bane but yes atleast speak identification with names that are in current meeting accurately and also i know that fully real time transcriptioon is really impossible but i request you to atleast it can handle it in minimal way
+
+
+
 venv/
 meeting_bot/
 node_modules/
 backend/chroma_data/
+apps/api/chroma_data/
 apps/web/node_modules/
 apps/web/.next/
 extension/node_modules/

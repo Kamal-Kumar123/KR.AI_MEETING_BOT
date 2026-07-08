@@ -231,5 +231,28 @@
     "summary": "Sprint planning: Kamal will deploy backend. Aditya will test extension.",
     "action_items": [],
     "share_url": "http://localhost:3000/?meeting_id=e98e60771457"
+  },
+  {
+    "meeting_id": "3001c1dd4391",
+    "timestamp": "2026-07-07T22:45:56.809688",
+    "mode": "standalone",
+    "series_id": "standalone-20260707224500534706",
+    "use_rag": false,
+    "source": "upload",
+    "transcript": "Sprint planning: Kamal will deploy backend. Aditya will test extension.",
+    "summary": "Sprint planning: Kamal will deploy backend. Aditya will test extension.",
+    "action_items": [
+      {
+        "task": "Deploy backend",
+        "owner": "Kamal",
+        "deadline": "Not specified"
+      },
+      {
+        "task": "Test extension",
+        "owner": "Aditya",
+        "deadline": "Not specified"
+      }
+    ],
+    "share_url": "http://localhost:3000/?meeting_id=3001c1dd4391"
   }
 ]

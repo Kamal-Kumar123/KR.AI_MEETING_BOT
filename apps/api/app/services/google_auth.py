@@ -5,9 +5,23 @@ from google.oauth2 import id_token
 from app.core.config import settings
 
 
-def _ensure_client_configured() -> None:
-    if not settings.google_client_id:
-        raise ValueError("GOOGLE_CLIENT_ID is not configured")
+def _google_client_ids() -> list[str]:
+    ids = []
+    if settings.google_client_id:
+        ids.append(settings.google_client_id)
+    if settings.google_extension_client_id and settings.google_extension_client_id not in ids:
+        ids.append(settings.google_extension_client_id)
+    return ids
+
+
+def _client_id_for_platform(platform: str) -> str:
+    if platform == "extension":
+        cid = settings.google_extension_client_id or settings.google_client_id
+    else:
+        cid = settings.google_client_id
+    if not cid:
+        raise ValueError("Google OAuth is not configured for this platform")
+    return cid
 
 
 def _normalize_google_profile(payload: dict) -> dict:
@@ -22,15 +36,18 @@ def _normalize_google_profile(payload: dict) -> dict:
     }
 
 
-def verify_google_id_token(token: str) -> dict:
-    _ensure_client_configured()
-    payload = id_token.verify_oauth2_token(token, google_requests.Request(), settings.google_client_id)
+def verify_google_id_token(token: str, platform: str = "web") -> dict:
+    client_id = _client_id_for_platform(platform)
+    payload = id_token.verify_oauth2_token(token, google_requests.Request(), client_id)
     return _normalize_google_profile(payload)
 
 
-def verify_google_access_token(token: str) -> dict:
+def verify_google_access_token(token: str, platform: str = "extension") -> dict:
     """Verify access tokens from chrome.identity.getAuthToken (Chrome extension flow)."""
-    _ensure_client_configured()
+    allowed = _google_client_ids()
+    if not allowed:
+        raise ValueError("Google OAuth is not configured")
+
     resp = requests.get(
         "https://oauth2.googleapis.com/tokeninfo",
         params={"access_token": token},
@@ -41,7 +58,9 @@ def verify_google_access_token(token: str) -> dict:
 
     payload = resp.json()
     client_id = payload.get("azp") or payload.get("aud")
-    if client_id != settings.google_client_id:
+    if client_id not in allowed:
+        raise ValueError("Google token client mismatch")
+    if platform == "web" and client_id != _client_id_for_platform(platform):
         raise ValueError("Google token client mismatch")
 
     if not payload.get("email"):

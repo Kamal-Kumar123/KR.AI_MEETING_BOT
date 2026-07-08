@@ -74,6 +74,10 @@ class Meeting(Base):
     share_token: Mapped[str] = mapped_column(String(64), unique=True, default=generate_uuid)
     meeting_url: Mapped[str | None] = mapped_column(Text, nullable=True)
     error_message: Mapped[str | None] = mapped_column(Text, nullable=True)
+    meeting_mode: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    series_id: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    use_rag: Mapped[bool] = mapped_column(Boolean, default=False)
+    rag_context_used: Mapped[bool] = mapped_column(Boolean, default=False)
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
 
     user: Mapped["User"] = relationship(back_populates="meetings")
@@ -155,7 +159,15 @@ class Participant(Base):
 
 
 def init_db() -> None:
+    from sqlalchemy import text
+
     Base.metadata.create_all(bind=engine)
+    if engine.dialect.name == "postgresql":
+        with engine.begin() as conn:
+            conn.execute(text("ALTER TABLE meetings ADD COLUMN IF NOT EXISTS meeting_mode VARCHAR(50)"))
+            conn.execute(text("ALTER TABLE meetings ADD COLUMN IF NOT EXISTS series_id VARCHAR(255)"))
+            conn.execute(text("ALTER TABLE meetings ADD COLUMN IF NOT EXISTS use_rag BOOLEAN DEFAULT FALSE"))
+            conn.execute(text("ALTER TABLE meetings ADD COLUMN IF NOT EXISTS rag_context_used BOOLEAN DEFAULT FALSE"))
 
 
 def get_db():

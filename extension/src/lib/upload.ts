@@ -11,9 +11,7 @@ export function buildMeetingPageUrl(
   shareToken?: string,
   apiUrl?: string
 ): string {
-  // Redirect to the KR.AI BOT website (frontend/) which renders the report via
-  // ?meeting_id. The share token lets it read the meeting without login and
-  // ?api tells it which backend served the recording.
+  // Redirect to the website report page. Share token allows read access without website login.
   const url = new URL(`${frontendUrl.replace(/\/$/, "")}/`);
   url.searchParams.set("meeting_id", meetingId);
   if (shareToken) url.searchParams.set("share", shareToken);

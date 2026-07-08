@@ -27,11 +27,14 @@ class ForgotPasswordRequest(BaseModel):
 class GoogleLoginRequest(BaseModel):
     id_token: str | None = None
     access_token: str | None = None
+    platform: str = Field(default="web", description="'web' for website, 'extension' for Chrome extension")
 
     @model_validator(mode="after")
     def require_one_token(self):
         if not self.id_token and not self.access_token:
             raise ValueError("id_token or access_token is required")
+        if self.platform not in ("web", "extension"):
+            raise ValueError("platform must be 'web' or 'extension'")
         return self
 
 
@@ -87,6 +90,32 @@ class MeetingResponse(BaseModel):
     summary: Optional[SummaryResponse] = None
     action_items: list[ActionItemResponse] = []
     participants: list[ParticipantResponse] = []
+    meeting_mode: Optional[str] = None
+    series_id: Optional[str] = None
+    use_rag: bool = False
+    rag_context_used: bool = False
+
+
+class ConfigureMeetingRequest(BaseModel):
+    mode: str = Field(description="'standalone' or 'connected'")
+    series_id: Optional[str] = Field(default=None, description="Required when mode is connected")
+    title: Optional[str] = Field(default=None, max_length=500, description="Display name for standalone meetings")
+
+
+class UserResponse(BaseModel):
+    id: str
+    email: str
+    full_name: Optional[str] = None
+
+
+class SeriesItem(BaseModel):
+    series_id: str
+    meeting_count: int
+
+
+class SeriesListResponse(BaseModel):
+    items: list[SeriesItem]
+    total: int
 
 
 class MeetingListResponse(BaseModel):

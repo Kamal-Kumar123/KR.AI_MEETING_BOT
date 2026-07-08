@@ -1,15 +1,25 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi.responses import Response
 from sqlalchemy import or_
+from sqlalchemy import func
 from sqlalchemy.orm import Session
 
 from app.api.deps import get_current_user, get_optional_user
 from app.db.models import Meeting, User, get_db
-from app.schemas.meeting import CreateMeetingRequest, GenerateSummaryRequest, MeetingListResponse, MeetingResponse, MeetingUpdateRequest
+from app.schemas.meeting import (
+    ConfigureMeetingRequest,
+    CreateMeetingRequest,
+    GenerateSummaryRequest,
+    MeetingListResponse,
+    MeetingResponse,
+    MeetingUpdateRequest,
+    SeriesListResponse,
+)
 from app.services.meeting_service import get_meeting_or_404, meeting_to_response
+from app.services.meeting_context import normalize_meeting_context
 from app.services.pdf_export import build_meeting_pdf
 from app.services.storage import storage_service
-from app.worker.tasks import enqueue_meeting_pipeline
+from app.worker.tasks import enqueue_finalize_insights, enqueue_meeting_pipeline
 
 router = APIRouter(tags=["meetings"])
 
@@ -74,6 +84,91 @@ def get_meeting(
     if not share:
         raise HTTPException(status_code=401, detail="Authentication or share token required")
     raise HTTPException(status_code=403, detail="Invalid share token")
+
+
+def _authorize_meeting(meeting: Meeting, user: User | None, share: str | None) -> bool:
+    if user and meeting.user_id == user.id:
+        return True
+    if share and meeting.share_token == share:
+        return True
+    return False
+
+
+@router.post("/meeting/{meeting_id}/configure", response_model=MeetingResponse)
+def configure_meeting(
+    meeting_id: str,
+    data: ConfigureMeetingRequest,
+    share: str | None = Query(default=None),
+    db: Session = Depends(get_db),
+    user: User | None = Depends(get_optional_user),
+):
+    """Choose standalone vs connected (RAG series) after extension upload."""
+    meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    if not _authorize_meeting(meeting, user, share):
+        raise HTTPException(status_code=403, detail="Authentication or share token required")
+
+    if meeting.status not in ("awaiting_config", "ready", "failed"):
+        raise HTTPException(
+            status_code=400,
+            detail=f"Meeting cannot be configured while status is '{meeting.status}'",
+        )
+    if not meeting.transcript:
+        raise HTTPException(status_code=400, detail="Transcript not ready yet")
+
+    try:
+        mode, series_id, use_rag = normalize_meeting_context(data.mode, data.series_id)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+    meeting.meeting_mode = mode
+    meeting.series_id = series_id
+    meeting.use_rag = use_rag
+    if data.title and data.title.strip():
+        meeting.title = data.title.strip()[:500]
+    meeting.status = "processing"
+    meeting.progress_message = "Generating AI insights..."
+    meeting.error_message = None
+    db.commit()
+
+    enqueue_finalize_insights(meeting.id)
+    db.refresh(meeting)
+    return meeting_to_response(meeting)
+
+
+@router.get("/meeting/{meeting_id}/series", response_model=SeriesListResponse)
+def list_user_series(
+    meeting_id: str,
+    q: str | None = Query(default=None, description="Search project / series name"),
+    share: str | None = Query(default=None),
+    db: Session = Depends(get_db),
+    user: User | None = Depends(get_optional_user),
+):
+    """List connected-series IDs for this user so they can pick an existing project."""
+    meeting = db.query(Meeting).filter(Meeting.id == meeting_id).first()
+    if not meeting:
+        raise HTTPException(status_code=404, detail="Meeting not found")
+    if not _authorize_meeting(meeting, user, share):
+        raise HTTPException(status_code=403, detail="Authentication or share token required")
+
+    query = (
+        db.query(Meeting.series_id, func.count(Meeting.id).label("meeting_count"))
+        .filter(
+            Meeting.user_id == meeting.user_id,
+            Meeting.meeting_mode == "connected",
+            Meeting.series_id.isnot(None),
+            ~Meeting.series_id.like("standalone-%"),
+        )
+        .group_by(Meeting.series_id)
+    )
+    if q and q.strip():
+        term = f"%{q.strip()}%"
+        query = query.filter(Meeting.series_id.ilike(term))
+
+    rows = query.order_by(func.count(Meeting.id).desc()).limit(20).all()
+    items = [{"series_id": row.series_id, "meeting_count": row.meeting_count} for row in rows if row.series_id]
+    return SeriesListResponse(items=items, total=len(items))
 
 
 @router.patch("/meeting/{meeting_id}", response_model=MeetingResponse)

@@ -23,7 +23,8 @@
         margin-bottom: 16px;
       }
       h2 { font-size: 1rem; margin: 0 0 12px; color: #c4cff0; }
-      label { display: flex; align-items: center; justify-content: space-between; margin: 10px 0; }
+      label { display: flex; align-items: center; justify-content: space-between; margin: 10px 0; gap: 12px; }
+      label span { flex: 1; }
       input[type="text"], select {
         width: 100%;
         padding: 10px;
@@ -34,6 +35,7 @@
         color: #fff;
       }
       .field { margin-bottom: 12px; }
+      .field > label { display: block; margin: 0; }
       button {
         width: 100%;
         padding: 12px;
@@ -44,12 +46,71 @@
         font-weight: 600;
         cursor: pointer;
       }
+      button.secondary {
+        background: transparent;
+        border: 1px solid rgba(255,255,255,0.2);
+        margin-top: 8px;
+      }
+      button.copy {
+        width: auto;
+        margin-top: 8px;
+        padding: 8px 12px;
+        font-size: 0.875rem;
+      }
+      .hint {
+        font-size: 0.8rem;
+        color: #9aa8c7;
+        margin: 0 0 12px;
+        line-height: 1.45;
+      }
+      .auth-status {
+        padding: 10px 12px;
+        border-radius: 8px;
+        background: rgba(255,255,255,0.05);
+        font-size: 0.875rem;
+        margin-bottom: 12px;
+      }
+      .auth-status.signed-in { color: #86efac; }
+      .auth-status.signed-out { color: #fbbf24; }
       .status { margin-top: 12px; font-size: 0.875rem; color: #86efac; }
+      .status.error { color: #fca5a5; }
     </style>
   </head>
   <body>
     <h1>KRAI Extension Settings</h1>
     <p class="sub">Configure recording, uploads, and server URLs.</p>
+
+    <section>
+      <h2>Google Sign-In</h2>
+      <p class="hint">
+        <strong>Normal login</strong> uses your Chrome extension client (<code>549582...</code>).
+        <strong>Account chooser</strong> (after logout) needs a one-time redirect URI in Google Console — see below.
+        Website login is separate and unchanged.
+      </p>
+      <div id="googleAuthStatus" class="auth-status signed-out">Not signed in</div>
+      <label>
+        <span>Choose Google account when signing in</span>
+        <input type="checkbox" id="googleAskAccount" />
+      </label>
+      <button id="googleSignOutBtn" class="secondary" type="button">Sign out of Google</button>
+      <div class="field" style="margin-top: 16px">
+        <label>Extension ID (must match Google Console Item ID)</label>
+        <input id="extensionId" type="text" readonly />
+      </div>
+      <div class="field">
+        <label>Extension OAuth client ID (normal login)</label>
+        <input id="extensionClientId" type="text" readonly />
+      </div>
+      <div class="field">
+        <label>Redirect URI — add once in Google Console (Web OAuth client)</label>
+        <input id="redirectUri" type="text" readonly />
+        <button id="copyRedirectUri" class="copy" type="button">Copy</button>
+      </div>
+      <p class="hint" style="margin-bottom: 0">
+        Google Cloud Console → Credentials → <strong>Web application</strong> client → Authorized redirect URIs → paste URI above → Save.
+        This is only for account chooser after logout. Extension client stays as-is.
+      </p>
+    </section>
 
     <section>
       <h2>Server URLs</h2>
