@@ -1,38 +1,43 @@
-# Privacy Policy (Template)
+# Privacy Policy — KRAI Meeting Assistant
 
-**KRAI Meeting Assistant**
+**Last updated:** July 9, 2026
 
-## What we collect
+Hosted copy (for store submission): deploy `frontend/public/privacy.html` to Vercel, then use:
 
-- Account email and hashed password
-- Meeting audio recordings you explicitly start
-- Transcripts, summaries, and action items generated from your recordings
-- Meeting metadata (platform, URL, timestamps)
+```text
+https://YOUR-VERCEL-APP.vercel.app/privacy.html
+```
+
+## Information we collect
+
+- Account email, name (Google sign-in or registration), auth token (browser storage)
+- Meeting audio you explicitly record or upload
+- Transcripts, summaries, action items, metadata
+- Extension settings (API URL, frontend URL)
 
 ## How we use data
 
-- Transcribe audio using speech-to-text
-- Generate summaries and insights using AI
-- Display results in your dashboard and share links you create
-
-## Storage
-
-- Recordings: S3-compatible object storage
-- Metadata: PostgreSQL database
-- Auth tokens: browser local storage (extension) / localStorage (web)
+- Authentication, transcription (Deepgram), AI insights (Gemini), storage, optional RAG for connected meetings
 
 ## Recording consent
 
-The extension **never records silently**. Users must click Start Recording and receive a visible notification while recording is active.
+Recording starts only when the user clicks **Start Recording**. Users must obtain participant consent where required by law.
+
+## Storage & processors
+
+- PostgreSQL (Neon), object storage (Cloudflare R2), Render/Vercel hosting
+- Google OAuth, Deepgram, Google Gemini
+
+## We do not
+
+- Sell user data
+- Use data for unrelated purposes (ads, credit scoring)
+- Transfer data except to operate the Service or as required by law
 
 ## Deletion
 
-Users can delete meetings via the dashboard or API. Deletion removes database records and stored audio files.
+Users delete meetings from the dashboard; associated audio and records are removed.
 
 ## Contact
 
-Support: your-email@domain.com
-
-## Updates
-
-Last updated: 2026-07-06
+2023nitsgr245@nitsri.ac.in

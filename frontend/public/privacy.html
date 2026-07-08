@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — KRAI Meeting Assistant</title>
+  <style>
+    :root { color-scheme: light dark; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+      line-height: 1.6;
+      max-width: 820px;
+      margin: 0 auto;
+      padding: 2rem 1.25rem 3rem;
+      color: #1f2937;
+      background: #f8fafc;
+    }
+    h1, h2 { color: #0f172a; }
+    h1 { font-size: 1.75rem; margin-bottom: 0.25rem; }
+    .meta { color: #64748b; font-size: 0.95rem; margin-bottom: 2rem; }
+    h2 { font-size: 1.15rem; margin-top: 1.75rem; border-bottom: 1px solid #e2e8f0; padding-bottom: 0.35rem; }
+    ul { padding-left: 1.25rem; }
+    li { margin: 0.35rem 0; }
+    a { color: #2563eb; }
+    .box {
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      padding: 1rem 1.25rem;
+      margin: 1rem 0;
+    }
+    @media (prefers-color-scheme: dark) {
+      body { background: #0f172a; color: #e2e8f0; }
+      h1, h2 { color: #f8fafc; }
+      .meta { color: #94a3b8; }
+      h2 { border-color: #334155; }
+      .box { background: #1e293b; border-color: #334155; }
+      a { color: #93c5fd; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Privacy Policy</h1>
+  <p class="meta"><strong>KRAI Meeting Assistant</strong> (browser extension &amp; web app)<br />Last updated: July 9, 2026</p>
+
+  <p>
+    This Privacy Policy describes how KRAI Meeting Assistant (&quot;we&quot;, &quot;our&quot;, &quot;the Service&quot;)
+    collects, uses, stores, and protects information when you use our Chrome/Edge extension and website.
+  </p>
+
+  <h2>1. Information we collect</h2>
+  <ul>
+    <li><strong>Account information:</strong> email address, name (when you register or sign in with Google), and an authentication token stored locally in your browser.</li>
+    <li><strong>Meeting audio:</strong> audio you explicitly start recording from supported meeting platforms (Google Meet, Microsoft Teams, Zoom) or upload manually.</li>
+    <li><strong>Meeting content:</strong> transcripts, speaker labels, summaries, action items, and related metadata (platform, duration, timestamps, meeting title).</li>
+    <li><strong>Configuration:</strong> API URL and frontend URL you set in extension options (stored in browser sync/local storage).</li>
+    <li><strong>Website content:</strong> when recording is active, audio from the meeting tab and/or microphone you approve may be captured and uploaded for transcription.</li>
+  </ul>
+
+  <h2>2. How we use information</h2>
+  <ul>
+    <li>Authenticate you and provide access to your meetings dashboard.</li>
+    <li>Transcribe recordings using cloud speech-to-text (Deepgram).</li>
+    <li>Generate summaries, titles, and action items using cloud AI (Google Gemini).</li>
+    <li>Store recordings and results so you can view, share, and delete them.</li>
+    <li>Improve connected-meeting features using optional RAG context within your project series (only when you choose &quot;connected&quot; mode).</li>
+  </ul>
+
+  <h2>3. Recording consent</h2>
+  <div class="box">
+    The extension <strong>does not record silently</strong>. Recording starts only when you click
+    <strong>Start Recording</strong>. You are responsible for informing meeting participants and obtaining
+    consent required by your organization or local laws before recording.
+  </div>
+
+  <h2>4. Where data is stored</h2>
+  <ul>
+    <li><strong>Cloud database:</strong> account and meeting metadata (PostgreSQL via Neon).</li>
+    <li><strong>Cloud object storage:</strong> audio files (Cloudflare R2 or compatible S3 storage).</li>
+    <li><strong>Your browser:</strong> login token and extension settings (Chrome storage API).</li>
+    <li><strong>Vector search (optional):</strong> meeting embeddings for connected-series RAG (ChromaDB on the API server).</li>
+  </ul>
+
+  <h2>5. Third-party services</h2>
+  <p>We use trusted processors to operate the Service. Data is sent only to provide features you request:</p>
+  <ul>
+    <li><strong>Google OAuth</strong> — sign-in (email, profile).</li>
+    <li><strong>Deepgram</strong> — speech-to-text transcription.</li>
+    <li><strong>Google Gemini API</strong> — summaries and action items.</li>
+    <li><strong>Cloud hosting</strong> — Render (API), Vercel (website), Cloudflare (storage).</li>
+  </ul>
+  <p>We do <strong>not</strong> sell or rent your personal data to third parties.</p>
+
+  <h2>6. Data sharing</h2>
+  <ul>
+    <li>We do not sell user data.</li>
+    <li>We do not use user data for unrelated purposes (such as advertising or credit scoring).</li>
+    <li>Share links you create may expose meeting summaries/transcripts to anyone with the link and share token.</li>
+    <li>We may disclose data if required by law.</li>
+  </ul>
+
+  <h2>7. Data retention &amp; deletion</h2>
+  <p>
+    Meeting data is kept until you delete it from <strong>My Meetings</strong> in the web app or via the API.
+    Deletion removes associated database records and stored audio files. You may delete your account by contacting us.
+  </p>
+
+  <h2>8. Security</h2>
+  <p>
+    We use HTTPS, authenticated API access (JWT), and cloud provider security controls. No method of transmission
+    over the Internet is 100% secure; use strong passwords and protect your device.
+  </p>
+
+  <h2>9. Children</h2>
+  <p>The Service is not intended for users under 13 years of age.</p>
+
+  <h2>10. Changes</h2>
+  <p>We may update this policy. The &quot;Last updated&quot; date at the top will change when we do.</p>
+
+  <h2>11. Contact</h2>
+  <p>
+    For privacy questions or deletion requests, contact:<br />
+    <strong>Email:</strong> <a href="mailto:2023nitsgr245@nitsri.ac.in">2023nitsgr245@nitsri.ac.in</a>
+  </p>
+</body>
+</html>
