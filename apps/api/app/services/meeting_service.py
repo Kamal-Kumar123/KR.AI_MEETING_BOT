@@ -6,7 +6,7 @@ from app.db.models import Meeting
 def _as_str_list(value) -> list[str]:
     """Coerce a stored list into a list of clean strings.
 
-    The local LLM (Ollama) sometimes returns objects like {"task": ..., "owner":
+    The LLM sometimes returns objects like {"task": ..., "owner":
     ...} inside fields that the API contract declares as list[str]. Flatten those
     so response serialization never fails with a validation error.
     """

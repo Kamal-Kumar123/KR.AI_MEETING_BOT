@@ -95,7 +95,7 @@ function ManualUpload() {
             <ol className="text-xs text-gray-400 list-decimal list-inside space-y-1 mb-3">
               <li>In Zoom: Record → Record on this Computer</li>
               <li>After meeting, find file in Documents/Zoom (.mp4 or .m4a)</li>
-              <li>Upload here → Whisper transcribes for free</li>
+              <li>Upload here → Deepgram transcribes with speaker labels</li>
             </ol>
             <label className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 cursor-pointer text-sm">
               {file ? file.name : 'Select recording (.mp4, .m4a, .mp3, .wav, .webm)'}

@@ -136,7 +136,7 @@ const TranscriptInput = () => {
         <ol className="text-xs text-gray-400 list-decimal list-inside space-y-1 mb-3">
           <li>In Zoom: Record → Record on this Computer</li>
           <li>After meeting, find file in Documents/Zoom (usually .mp4 or .m4a)</li>
-          <li>Upload here → Whisper transcribes everyone for free</li>
+          <li>Upload here → Deepgram transcribes with speaker labels</li>
         </ol>
         <label className="inline-block bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 cursor-pointer text-sm">
           {file && isAudioFile(file) ? file.name : 'Select Zoom recording (.mp4, .m4a, .mp3, .wav)'}
@@ -215,7 +215,7 @@ const TranscriptInput = () => {
         >
           {loading
             ? isAudioFile(file)
-              ? 'Transcribing with Whisper (free)...'
+              ? 'Transcribing audio...'
               : 'Processing...'
             : isAudioFile(file)
               ? 'Transcribe & Summarize'
@@ -263,7 +263,7 @@ const TranscriptInput = () => {
           <p><strong>Mode:</strong> {meetingMeta.mode}</p>
           <p><strong>Series:</strong> {meetingMeta.seriesId}</p>
           <p><strong>RAG used:</strong> {meetingMeta.useRag ? (meetingMeta.ragContextUsed ? 'Yes (past context found)' : 'Yes (no past context yet)') : 'No'}</p>
-          <p><strong>Stack:</strong> {meetingMeta.stack} (Whisper + T5 + Ollama + ChromaDB)</p>
+          <p><strong>Stack:</strong> {meetingMeta.stack} (Deepgram + Gemini + ChromaDB)</p>
           {meetingMeta.shareUrl && (
             <div className="mt-2 pt-2 border-t border-gray-600">
               <p className="text-xs mb-1"><strong>Share link:</strong></p>

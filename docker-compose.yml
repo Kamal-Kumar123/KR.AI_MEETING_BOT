@@ -33,7 +33,8 @@ services:
       S3_SECRET_KEY: minioadmin123
       S3_BUCKET: krai-recordings
       S3_USE_SSL: "false"
-      OLLAMA_BASE_URL: http://host.docker.internal:11434
+      DEEPGRAM_API_KEY: ${DEEPGRAM_API_KEY:-}
+      GEMINI_API_KEY: ${GEMINI_API_KEY:-}
     depends_on:
       - redis
       - minio

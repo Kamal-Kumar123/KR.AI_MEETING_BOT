@@ -47,12 +47,19 @@ app.include_router(settings_routes.router, prefix="/api/v1")
 @app.get("/health")
 def health():
     from app.core.config import settings as cfg
+    from app.services.deepgram_stt import deepgram_configured
+    from app.services.gemini_llm import gemini_available
 
     return {
         "status": "ok",
         "env": cfg.env,
-        "version": "2.1.0",
+        "version": "3.0.0",
+        "pipeline": "deepgram_gemini",
         "celery": cfg.use_celery,
+        "deepgram": deepgram_configured(),
+        "gemini": gemini_available(),
+        "gemini_model": cfg.gemini_model,
+        "deepgram_model": cfg.deepgram_model,
     }
 
 

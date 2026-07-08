@@ -1,21 +1,48 @@
 services:
   - type: web
-    name: kr-ai-meeting-bot
-    runtime: python
-    rootDir: backend
+    name: kr-ai-meeting-bot-api
+    runtime: docker
+    rootDir: apps/api
     plan: free
-    buildCommand: pip install -r requirements.txt
-    startCommand: uvicorn main:app --host 0.0.0.0 --port $PORT
+    dockerfilePath: Dockerfile
     envVars:
       - key: ENV
         value: production
-      - key: PYTHON_VERSION
-        value: 3.11.0
-      - key: ALLOWED_ORIGINS
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET_KEY
         sync: false
       - key: FRONTEND_URL
         sync: false
-      - key: OLLAMA_BASE_URL
+      - key: BACKEND_URL
         sync: false
-      - key: OLLAMA_MODEL
-        value: mistral
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: DEEPGRAM_API_KEY
+        sync: false
+      - key: DEEPGRAM_MODEL
+        value: nova-2
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.0-flash
+      - key: S3_ENDPOINT_URL
+        sync: false
+      - key: S3_ACCESS_KEY
+        sync: false
+      - key: S3_SECRET_KEY
+        sync: false
+      - key: S3_BUCKET
+        sync: false
+      - key: S3_REGION
+        value: us-east-1
+      - key: S3_USE_SSL
+        value: "true"
+      - key: STORAGE_BACKEND
+        value: s3
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_EXTENSION_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false

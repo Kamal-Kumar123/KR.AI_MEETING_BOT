@@ -8,8 +8,9 @@ Design goals for this project:
 - Graceful fallback: if optional deps are missing or audio is too short,
   every segment is labelled "Speaker 1" and the transcript still works.
 
-Optional dependencies (install for real speaker separation):
-    pip install resemblyzer scikit-learn librosa
+Primary speaker labels come from Deepgram diarization. Optional local fallback
+(requires MSVC on Windows — not installed by default):
+    pip install webrtcvad-wheels resemblyzer scikit-learn librosa
 """
 from __future__ import annotations
 
@@ -22,13 +23,6 @@ TARGET_SR = 16000
 
 def _load_audio_16k_mono(path: str):
     """Decode any audio file to a 16k mono float32 numpy array."""
-    try:
-        from faster_whisper.audio import decode_audio
-
-        return decode_audio(path, sampling_rate=TARGET_SR)
-    except Exception:
-        pass
-    # Fallback via librosa (handles more container formats).
     import librosa
 
     audio, _ = librosa.load(path, sr=TARGET_SR, mono=True)

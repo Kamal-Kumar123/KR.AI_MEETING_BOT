@@ -1,3 +1,4 @@
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -25,18 +26,25 @@ class Settings(BaseSettings):
     backend_url: str = "http://localhost:8000"
     allowed_origins: str = "http://localhost:3000"
 
-    whisper_model: str = "base"
-    whisper_device: str = "cpu"
-    ollama_base_url: str = "http://localhost:11434"
-    ollama_model: str = "llama3.2:1b"
+    # Cloud AI (Deepgram STT + Gemini LLM)
+    deepgram_api_key: str = ""
+    deepgram_model: str = "nova-2"
+    gemini_api_key: str = ""
+    gemini_model: str = "gemini-2.0-flash"
 
     google_client_id: str = ""
     google_client_secret: str = ""
+    google_extension_client_id: str = ""
 
     redis_url: str = "redis://localhost:6379/0"
     use_celery: bool = False
 
     rate_limit: str = "60/minute"
+
+    @field_validator("deepgram_api_key", "gemini_api_key", mode="before")
+    @classmethod
+    def strip_api_keys(cls, value):
+        return value.strip() if isinstance(value, str) else value
 
     def cors_origins(self) -> list[str]:
         return [o.strip() for o in self.allowed_origins.split(",") if o.strip()]

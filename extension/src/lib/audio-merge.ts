@@ -1,4 +1,4 @@
-// Whisper works best on 16 kHz mono audio, and downmixing here keeps the
+// STT works best on 16 kHz mono audio, and downmixing here keeps the
 // uploaded file tiny (~2 MB / 10 min) so long meetings don't blow up memory
 // or storage. We mix OFFLINE (no real-time re-recording), so merging a 30-min
 // meeting takes a couple of seconds instead of 30 minutes.

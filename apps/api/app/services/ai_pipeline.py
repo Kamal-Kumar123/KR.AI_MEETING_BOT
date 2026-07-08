@@ -1,139 +1,70 @@
 import json
+import logging
 import os
 import re
-import tempfile
 from datetime import datetime
 
-import requests
 from sqlalchemy.orm import Session
 
-from app.core.config import settings
 from app.db.models import ActionItem, Meeting, Participant, Summary, Transcript
+from app.services.deepgram_stt import download_to_temp, transcribe_audio_file, transcribe_recording
+from app.services.gemini_llm import gemini_available, gemini_chat, gemini_generate_json
 from app.services.storage import storage_service
+
+logger = logging.getLogger(__name__)
 
 os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
-
-_ollama_ok: bool | None = None
-
-
-def _ollama_available() -> bool:
-    global _ollama_ok
-    if _ollama_ok is not None:
-        return _ollama_ok
-    try:
-        r = requests.get(f"{settings.ollama_base_url}/api/tags", timeout=5)
-        if r.status_code != 200:
-            _ollama_ok = False
-            return False
-        names = [m.get("name", "") for m in r.json().get("models", [])]
-        _ollama_ok = any(settings.ollama_model in n for n in names)
-    except Exception:
-        _ollama_ok = False
-    return _ollama_ok
+# Re-export for backward compatibility with scripts importing from ai_pipeline.
+__all__ = [
+    "download_to_temp",
+    "transcribe_audio_file",
+    "transcribe_recording",
+    "process_meeting_pipeline",
+    "finalize_meeting_insights",
+    "generate_ai_insights",
+]
 
 
-def _ollama_chat(system: str, user: str, max_tokens: int = 800) -> str:
-    response = requests.post(
-        f"{settings.ollama_base_url}/api/chat",
-        json={
-            "model": settings.ollama_model,
-            "messages": [{"role": "system", "content": system}, {"role": "user", "content": user}],
-            "stream": False,
-            "options": {
-                "temperature": 0.2,
-                "num_predict": max_tokens,
-                "num_ctx": 4096,
-            },
-        },
-        timeout=120,
-    )
-    response.raise_for_status()
-    return response.json()["message"]["content"].strip()
+SUMMARY_SYSTEM_PROMPT = """You are a senior executive meeting analyst.
+
+Transform raw meeting transcripts into a clear, professional executive summary.
+
+Rules:
+- Write ONE cohesive paragraph in third person, past tense (120–250 words for typical meetings)
+- Cover: participants or speakers, main topics, key discussion points, decisions, and high-level task assignments
+- Use ONLY facts explicitly stated — never invent names, dates, decisions, or tasks
+- Do NOT copy the transcript verbatim or include filler ("um", "like", "hello, my name is")
+- Do NOT use bullet points, headings, markdown, or speaker labels
+- If past meeting context is provided, briefly connect this meeting to ongoing project threads
+- Keep action-item details brief here; structured tasks are extracted separately"""
 
 
-def _get_summarizer():
-    from transformers import pipeline
+ACTION_ITEMS_SYSTEM_PROMPT = """You are an expert project coordinator extracting actionable tasks from meetings.
 
-    return pipeline("text2text-generation", model="t5-small", device=-1)
+Return ONLY a valid JSON array. No markdown, no prose, no wrapper object.
 
+Each element must be an object with exactly these keys:
+- "task": specific work to be done (short, actionable phrase)
+- "owner": person responsible — use "Unassigned" if no name is given
+- "deadline": due date as stated — use "Not specified" if none mentioned
 
-def _t5_summarize(text: str, max_len: int = 150) -> str:
-    if len(text.split()) < 20:
-        return text
-    summarizer = _get_summarizer()
-    out = summarizer(f"summarize: {text[:3000]}", max_length=max_len, min_length=30, do_sample=False)
-    return out[0]["generated_text"]
+Include every explicit assignment, for example:
+- "assign one task to Hassan. He has to complete his work by July 15"
+  → {"task": "complete his work", "owner": "Hassan", "deadline": "July 15"}
+- "to Aditya, he has to complete his work by July 20"
+  → {"task": "complete his work", "owner": "Aditya", "deadline": "July 20"}
+- "you need to finish the report by Friday" (no name)
+  → {"task": "finish the report", "owner": "Unassigned", "deadline": "Friday"}
 
-
-_WHISPER_MODEL = None
-
-
-def _get_whisper_model():
-    global _WHISPER_MODEL
-    if _WHISPER_MODEL is None:
-        from faster_whisper import WhisperModel
-
-        compute = "int8" if settings.whisper_device == "cpu" else "float16"
-        _WHISPER_MODEL = WhisperModel(
-            settings.whisper_model,
-            device=settings.whisper_device,
-            compute_type=compute,
-        )
-    return _WHISPER_MODEL
+Do NOT include: self-introductions, résumé/bio, general discussion, or completed past work.
+Return [] only when there are genuinely no task assignments."""
 
 
-def download_to_temp(s3_key: str) -> str:
-    data = storage_service.download_bytes(s3_key)
-    suffix = ".webm" if s3_key.endswith(".webm") else ".wav"
-    with tempfile.NamedTemporaryFile(delete=False, suffix=suffix) as tmp:
-        tmp.write(data)
-        return tmp.name
+INSIGHTS_SYSTEM_PROMPT = """You are a precise meeting intelligence assistant.
 
-
-def transcribe_audio_file(path: str) -> dict:
-    model = _get_whisper_model()
-    # Higher accuracy: beam search + VAD to drop silence/noise that causes
-    # hallucinations ("you", "thanks for watching"). word_timestamps enable
-    # speaker diarization alignment downstream.
-    segments, info = model.transcribe(
-        path,
-        beam_size=5,
-        vad_filter=True,
-        vad_parameters={"min_silence_duration_ms": 500},
-        word_timestamps=True,
-        condition_on_previous_text=False,
-        temperature=[0.0, 0.2, 0.4],
-    )
-    seg_list = []
-    parts = []
-    for seg in segments:
-        text = seg.text.strip()
-        if not text:
-            continue
-        seg_list.append(
-            {
-                "start": float(seg.start or 0.0),
-                "end": float(seg.end or 0.0),
-                "text": text,
-            }
-        )
-        parts.append(text)
-    return {
-        "text": " ".join(parts).strip(),
-        "segments": seg_list,
-        "duration": info.duration,
-        "language": info.language,
-    }
-
-
-def transcribe_recording(s3_key: str) -> dict:
-    path = download_to_temp(s3_key)
-    try:
-        return transcribe_audio_file(path)
-    finally:
-        if os.path.exists(path):
-            os.remove(path)
+Analyze transcripts and return ONLY valid JSON. Never fabricate facts, tasks, or dates.
+Extract action items aggressively — any phrase where someone must do something by a date counts."""
 
 
 def _parse_json_object(raw: str) -> dict:
@@ -265,28 +196,32 @@ def _extract_action_items_heuristic(text: str) -> list[dict]:
         seen.add(key)
         items.append({"task": task, "owner": owner, "deadline": deadline or "Not specified"})
 
-    # Deadline boundary: stop at "and one task", next sentence, or end.
-    _deadline_end = r"(?=\s+and\s+(?:one\s+)?task|\s+and\s+hey\s+|\.\s|\s+so\s+|,\s+so|$)"
+    # Deadline boundary: stop at next assignment, sentence, or end.
+    _deadline_end = r"(?=\s+and\s+(?:one\s+)?(?:task|project)|\s+and\s+hey\s+|\.\s|\s+so\s+|,\s+so|$)"
+    _due = r"(?:by|via|before|until|on|due)"
+    _assign_noun = r"(?:task|project|work|assignment)"
 
     patterns = [
+        # "assign one task/project to Hassan. He has to complete ... by/via July 15"
+        rf"(?i)assign(?:\s+\w+)?\s+{_assign_noun}\s+to\s+([A-Za-z]+)\.?\s*(?:He|She)\s+has\s+to\s+(.+?)\s+{_due}\s+(.+?)(?=\.|,\s+And|\s+and,|\s+And|\s+to\s+[A-Z]|$)",
+        # "to Aditya, he has to complete his work by/via July 20"
+        rf"(?i)\bto\s+([A-Za-z]+)\s*,?\s*(?:he|she)\s+has\s+to\s+(.+?)\s+{_due}\s+(.+?)(?=\.|,\s|\s+And|\s+and|\$|$)",
         # "One task is to Aditya. He has to complete his work by 10th of July"
-        rf"(?i)(?:one\s+)?task\s+is\s+to\s+([A-Za-z]+)\.?\s*(?:He|She)\s+has\s+to\s+(.+?)\s+by\s+(.+?){_deadline_end}",
+        rf"(?i)(?:one\s+)?(?:task|project)\s+is\s+to\s+([A-Za-z]+)\.?\s*(?:He|She)\s+has\s+to\s+(.+?)\s+{_due}\s+(.+?){_deadline_end}",
         # "hey Hassan, you have to finish your work by 15th of July"
-        rf"(?i)\bhey\s+([A-Za-z]+)\s*,?\s*(?:you have to|you need to|please)\s+(.+?)\s+by\s+(.+?){_deadline_end}",
+        rf"(?i)\bhey\s+([A-Za-z]+)\s*,?\s*(?:you have to|you need to|please)\s+(.+?)\s+{_due}\s+(.+?){_deadline_end}",
         # "assign task to Aritya, you have to finish your work by 10th of July"
-        rf"(?i)\bto\s+([A-Za-z]+)\s*,?\s*(?:you have to|you need to|please)\s+(.+?)\s+by\s+(.+?){_deadline_end}",
+        rf"(?i)\bto\s+([A-Za-z]+)\s*,?\s*(?:you have to|you need to|please)\s+(.+?)\s+{_due}\s+(.+?){_deadline_end}",
         # "Aditya will submit the report by July 10"
-        r"(?i)\b([A-Za-z]+)\s+will\s+(.+?)\s+by\s+(.+?)(?=\.|,|\s+and\s+|$)",
+        rf"(?i)\b([A-Za-z]+)\s+will\s+(.+?)\s+{_due}\s+(.+?)(?=\.|,|\s+and\s+|$)",
         # "John, please send the proposal by Friday"
-        r"(?i)\b([A-Za-z]+)\s*,?\s*please\s+(.+?)\s+by\s+(.+?)(?=\.|,|\s+and\s+|$)",
+        rf"(?i)\b([A-Za-z]+)\s*,?\s*please\s+(.+?)\s+{_due}\s+(.+?)(?=\.|,|\s+and\s+|$)",
         # "Aditya has to complete his work by 10th of July"
-        r"(?i)\b([A-Za-z]+)\s+has\s+to\s+(.+?)\s+by\s+(.+?)(?=\.|,|\s+and\s+|$)",
+        rf"(?i)\b([A-Za-z]+)\s+has\s+to\s+(.+?)\s+{_due}\s+(.+?)(?=\.|,|\s+and\s+|$)",
         # "assigned to Aditya ... deadline 10th July"
-        r"(?i)\bassigned\s+to\s+([A-Za-z]+)[^.]*?(?:by|before|deadline)\s+(.+?)(?=\.|,|\s+and\s+|$)",
+        rf"(?i)\bassigned\s+to\s+([A-Za-z]+)[^.]*?(?:{_due}|deadline)\s+(.+?)(?=\.|,|\s+and\s+|$)",
         # "you have to complete your work by 10th of July" (no name — use Unassigned)
-        r"(?i)(?:you have to|you need to|must)\s+(.+?)\s+by\s+(.+?)(?=\.|,|\s+and\s+|This is|$)",
-        # "deadline ... 10th of July" with preceding task phrase
-        r"(?i)\bcomplete\s+(?:your|the)\s+work\s+by\s+(.+?)(?=\.|,|\s+and\s+|$)",
+        rf"(?i)(?:you have to|you need to|must)\s+(.+?)\s+{_due}\s+(.+?)(?=\.|,|\s+and\s+|This is|$)",
     ]
 
     for pat in patterns:
@@ -316,50 +251,53 @@ def collect_action_items(transcript: str, past_context: str, insights: dict) -> 
 
 
 def extract_action_items(transcript: str, past_context: str = "") -> list[dict]:
-    """Dedicated pass: assign tasks to people with deadlines when explicitly stated."""
+    """Dedicated Gemini pass: assign tasks to people with deadlines when explicitly stated."""
     clean = _strip_speaker_labels(transcript)
-    if not clean or not _ollama_available():
+    if not clean:
+        return []
+
+    if not gemini_available():
         return []
 
     context_block = ""
     if past_context:
         context_block = f"Context from earlier meetings (reference only):\n{past_context[:1500]}\n\n"
 
-    prompt = f"""{context_block}Extract action items from this meeting transcript.
-
-An action item is when someone assigns a specific task to a person (or to "you"/team), with or without a deadline.
-If no person name is given, use owner "Unassigned".
-
-INCLUDE examples like:
-- "One task is to Aditya. He has to complete his work by 10th of July"
-- "you have to complete your work by 10th of July" → owner: Unassigned
-- "Like here you have to complete your work by 10th of July" → task + deadline, owner Unassigned if no name
-
-Do NOT include past completed work, self-introductions, or general discussion without a clear assigned task.
-
-Return ONLY a JSON array. Each object must have exactly these keys:
-- "task": what needs to be done (short, specific)
-- "owner": person responsible (use "Unassigned" if unclear)
-- "deadline": when it is due (use "Not specified" if not stated)
-
-Example output:
-[
-  {{"task": "complete his work", "owner": "Aditya", "deadline": "10th of July"}},
-  {{"task": "complete his work", "owner": "Hasan", "deadline": "15th of July, 2026"}}
-]
+    prompt = f"""{context_block}Extract all action items from this meeting transcript.
 
 Transcript:
-{clean[:4000]}"""
+{clean[:6000]}"""
     try:
-        raw = _ollama_chat(
-            "You extract meeting action items. Return a valid JSON array only, no markdown.",
-            prompt,
-            max_tokens=800,
-        )
+        raw = gemini_generate_json(ACTION_ITEMS_SYSTEM_PROMPT, prompt, max_tokens=1200)
         parsed = _parse_json_array(raw)
         return _normalize_action_items(parsed)
-    except Exception:
+    except Exception as exc:
+        logger.warning("Gemini action-item extraction failed, using heuristics only: %s", exc)
         return []
+
+
+def _generate_summary_paragraph(transcript: str, past_context: str = "") -> str:
+    """Dedicated Gemini pass for executive summary."""
+    clean = _strip_speaker_labels(transcript)
+    if not clean or not gemini_available():
+        return ""
+
+    context_block = ""
+    if past_context:
+        context_block = (
+            f"Past meetings in this project series (continuity only — do NOT invent facts):\n"
+            f"{past_context[:2500]}\n\n"
+        )
+
+    prompt = f"""{context_block}Write an executive summary of this meeting:
+
+{clean[:8000]}"""
+    try:
+        summary = gemini_chat(SUMMARY_SYSTEM_PROMPT, prompt, max_tokens=600)
+        return summary.strip()
+    except Exception as exc:
+        logger.warning("Gemini summary generation failed: %s", exc)
+        return ""
 
 
 def _strip_speaker_labels(text: str) -> str:
@@ -384,34 +322,25 @@ def _summarize_discussion(
             f"Context from earlier meetings in this project series:\n{past_context[:2500]}\n\n"
         )
 
-    if _ollama_available():
+    if gemini_available():
         try:
-            summary = _ollama_chat(
-                "You are a meeting assistant. Write ONE single, coherent summary "
-                "of the entire meeting that captures the key points raised by every "
-                "participant. If past meeting context is provided, connect this meeting "
-                "to ongoing threads in the series. Use plain paragraphs only — no headings, "
-                "no bullet points, and no speaker labels.",
+            summary = gemini_chat(
+                SUMMARY_SYSTEM_PROMPT,
                 f"{context_block}Summarize this full meeting discussion:\n\n{clean[:6000]}",
-                max_tokens=400,
+                max_tokens=600,
             )
             if summary.strip():
                 return summary.strip()
-        except Exception:
-            pass
-
-    if past_summaries and len(clean.split()) >= 30:
-        combined = " ".join(past_summaries + [clean])[:3000]
-        if len(combined.split()) >= 30:
-            return _t5_summarize(combined, 220)
+        except Exception as exc:
+            logger.warning("Gemini discussion summary failed: %s", exc)
 
     if len(clean.split()) < 60:
         return clean
-    return _t5_summarize(clean, 220)
+    return clean[:500]
 
 
 def _token_budget(transcript: str) -> int:
-    """Shorter transcripts need fewer generated tokens — keeps Ollama fast."""
+    """Shorter transcripts need fewer generated tokens."""
     words = len(transcript.split())
     if words < 120:
         return 500
@@ -438,9 +367,7 @@ def generate_ai_insights(transcript: str, past_context: str = "") -> dict:
     if not clean:
         return default
 
-    if not _ollama_available():
-        if len(clean.split()) >= 60:
-            default["summary"] = _t5_summarize(clean, 220)
+    if not gemini_available():
         return default
 
     context_block = ""
@@ -451,44 +378,42 @@ def generate_ai_insights(transcript: str, past_context: str = "") -> dict:
         )
 
     max_tokens = _token_budget(clean)
-    prompt = f"""{context_block}Analyze this meeting transcript. Extract ONLY information explicitly stated.
-Do NOT invent, assume, guess, or infer anything not actually said.
+    prompt = f"""{context_block}Analyze this meeting transcript.
 
-Return ONLY valid JSON with these keys:
-- "title": short descriptive title from what was discussed
-- "summary": ONE coherent paragraph summarizing the entire meeting (plain prose, no bullets).
-  Cover who spoke and what was discussed. Do NOT list structured action items here — those go in action_items.
-- "bullet_summary": array of main points actually said
-- "action_items": array of {{"task", "owner", "deadline"}} for every explicit task assignment in the meeting.
-  Example: speaker assigns "finish your work by 10th of July" to Aritya →
-  {{"task": "finish your work", "owner": "Aritya", "deadline": "10th of July"}}.
-  Include ALL assignments with person + task + deadline when stated. Empty [] only if none.
+Return JSON with these keys:
+- "title": short descriptive title (max 8 words) from what was discussed
+- "summary": leave as empty string "" — summary is generated separately
+- "bullet_summary": array of 3–8 main points actually stated
+- "action_items": array of {{"task", "owner", "deadline"}} for EVERY task assignment
 - "key_decisions": array (empty [] if none)
 - "discussion_points": array of topics discussed
 - "open_questions": array (empty [] if none)
 - "risks": array (empty [] if none)
 - "next_steps": array (empty [] if none)
-- "keywords": array of key terms from the transcript
+- "keywords": array of 5–12 key terms
 
 Transcript:
 {clean[:6000]}"""
     try:
-        raw = _ollama_chat(
-            "You are a precise meeting assistant. Return JSON only. Never fabricate tasks or facts.",
-            prompt,
-            max_tokens=max_tokens,
-        )
+        raw = gemini_generate_json(INSIGHTS_SYSTEM_PROMPT, prompt, max_tokens=max_tokens)
         parsed = _parse_json_object(raw)
         default.update({k: parsed.get(k, default[k]) for k in default if k in parsed})
         if parsed.get("title"):
             default["title"] = parsed["title"]
-        if parsed.get("summary"):
+
+        summary = _generate_summary_paragraph(clean, past_context)
+        if summary:
+            default["summary"] = summary
+        elif parsed.get("summary"):
             default["summary"] = str(parsed["summary"]).strip()
+
         default["action_items"] = _normalize_action_items(parsed.get("action_items", []))
         return default
-    except Exception:
-        if len(clean.split()) >= 60:
-            default["summary"] = _t5_summarize(clean, 220)
+    except Exception as exc:
+        logger.warning("Gemini insights generation failed, using fallbacks: %s", exc)
+        summary = _generate_summary_paragraph(clean, past_context)
+        if summary:
+            default["summary"] = summary
         return default
 
 
@@ -528,18 +453,25 @@ def process_meeting_pipeline(db: Session, meeting_id: str) -> None:
             db.commit()
             return
 
-        # Speaker diarization: label each segment with "Speaker N".
+        # Speaker labels: Deepgram diarization when available, else local fallback.
         meeting.progress_message = "Identifying speakers..."
         db.commit()
         segments = result["segments"]
-        num_speakers = 1
+        num_speakers = int(result.get("num_speakers") or 1)
+        has_dg_speakers = any(s.get("speaker") for s in segments)
         try:
             from app.services.diarization import build_diarized_text, diarize_segments
 
-            segments, num_speakers = diarize_segments(audio_path, segments)
-            diarized_text = build_diarized_text(segments)
-            if diarized_text.strip():
-                transcript_text = diarized_text
+            if has_dg_speakers:
+                diarized_text = build_diarized_text(segments)
+                if diarized_text.strip():
+                    transcript_text = diarized_text
+                num_speakers = len({s.get("speaker") for s in segments if s.get("speaker")}) or 1
+            elif audio_path:
+                segments, num_speakers = diarize_segments(audio_path, segments)
+                diarized_text = build_diarized_text(segments)
+                if diarized_text.strip():
+                    transcript_text = diarized_text
         except Exception:
             pass
 
