@@ -10,7 +10,8 @@ Base URL: `http://localhost:8000`
 | POST | `/api/v1/auth/login` | `{ email, password }` → JWT |
 | POST | `/api/v1/auth/google` | Stub — configure OAuth in production |
 | POST | `/api/v1/auth/logout` | Client-side token delete |
-| POST | `/api/v1/auth/forgot-password` | Stub |
+| POST | `/api/v1/auth/forgot-password` | Send password reset email (EmailJS) |
+| POST | `/api/v1/auth/reset-password` | Set new password with reset token |
 
 ## Recordings
 

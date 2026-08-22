@@ -24,6 +24,11 @@ class ForgotPasswordRequest(BaseModel):
     email: EmailStr
 
 
+class ResetPasswordRequest(BaseModel):
+    token: str = Field(min_length=10)
+    password: str = Field(min_length=8)
+
+
 class GoogleLoginRequest(BaseModel):
     id_token: str | None = None
     access_token: str | None = None

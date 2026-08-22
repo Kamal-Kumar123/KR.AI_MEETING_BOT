@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import Header from './Header';
 import { useAuth } from '../context/AuthContext';
-import { GOOGLE_CLIENT_ID } from '../lib/api';
+import { forgotPassword, GOOGLE_CLIENT_ID } from '../lib/api';
 
 const REGISTERED_KEY = 'krai_has_registered';
 
@@ -16,6 +16,8 @@ function markRegistered() {
 function LoginPage() {
   const { signIn, signUp, signInWithGoogle, user, loading } = useAuth();
   const [tab, setTab] = useState('login');
+  const [view, setView] = useState('auth');
+  const [forgotEmail, setForgotEmail] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [fullName, setFullName] = useState('');
@@ -90,6 +92,27 @@ function LoginPage() {
     setError('');
     setSuccess('');
     setTab('login');
+    setView('auth');
+  };
+
+  const handleForgotSubmit = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
+    const emailValue = forgotEmail.trim() || email.trim();
+    if (!emailValue) {
+      setError('Enter your email address.');
+      return;
+    }
+    setBusy(true);
+    try {
+      const data = await forgotPassword(emailValue);
+      setSuccess(data.message || 'Check your email for reset instructions.');
+    } catch (err) {
+      setError(err.response?.data?.detail || 'Could not send reset email.');
+    } finally {
+      setBusy(false);
+    }
   };
 
   const handleSubmit = async (e) => {
@@ -145,11 +168,45 @@ function LoginPage() {
         <div className="w-full max-w-md p-8 rounded-xl border border-gray-700 bg-gray-900/50 shadow-xl">
           <h1 className="text-2xl font-bold text-center mb-2">Welcome to KR.AI BOT</h1>
           <p className="text-sm text-gray-400 text-center mb-6">
-            {tab === 'register'
-              ? 'Create an account to access your extension meetings'
-              : 'Welcome back — sign in to your account'}
+            {view === 'forgot'
+              ? 'We will email you a link to reset your password'
+              : tab === 'register'
+                ? 'Create an account to access your extension meetings'
+                : 'Welcome back — sign in to your account'}
           </p>
 
+          {view === 'forgot' ? (
+            <form onSubmit={handleForgotSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm mb-1">Email</label>
+                <input
+                  type="email"
+                  required
+                  value={forgotEmail || email}
+                  onChange={(e) => setForgotEmail(e.target.value)}
+                  className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-sm"
+                  placeholder="you@example.com"
+                />
+              </div>
+              {error && <p className="text-sm text-red-400">{error}</p>}
+              {success && <p className="text-sm text-green-400">{success}</p>}
+              <button
+                type="submit"
+                disabled={busy}
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:opacity-60 py-2 rounded font-medium"
+              >
+                {busy ? 'Sending…' : 'Send reset link'}
+              </button>
+              <button
+                type="button"
+                onClick={switchToLogin}
+                className="w-full text-sm text-gray-400 hover:text-gray-200"
+              >
+                Back to login
+              </button>
+            </form>
+          ) : (
+            <>
           <div className="flex mb-6 rounded-lg overflow-hidden border border-gray-700">
             <button
               type="button"
@@ -206,6 +263,20 @@ function LoginPage() {
                 className="w-full px-3 py-2 rounded bg-gray-800 border border-gray-600 text-sm"
                 placeholder={tab === 'register' ? 'Min 8 characters' : 'Password'}
               />
+              {tab === 'login' && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setError('');
+                    setSuccess('');
+                    setForgotEmail(email);
+                    setView('forgot');
+                  }}
+                  className="mt-2 text-xs text-blue-400 hover:underline"
+                >
+                  Forgot password?
+                </button>
+              )}
             </div>
 
             {error && <p className="text-sm text-red-400">{error}</p>}
@@ -235,6 +306,8 @@ function LoginPage() {
               <p className="text-xs text-gray-500 text-center mt-2">Loading Google Sign-In…</p>
             )}
           </div>
+            </>
+          )}
         </div>
       </main>
     </div>

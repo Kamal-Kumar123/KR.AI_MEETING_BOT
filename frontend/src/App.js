@@ -1,6 +1,7 @@
 import React from 'react';
 import MeetingShare from './components/MeetingShare';
 import LoginPage from './components/LoginPage';
+import ResetPasswordPage from './components/ResetPasswordPage';
 import MyMeetings from './components/MyMeetings';
 import ManualUpload from './components/ManualUpload';
 import { useAuth } from './context/AuthContext';
@@ -14,6 +15,10 @@ function App() {
   // Share links work without login
   if (meetingId) {
     return <MeetingShare meetingId={meetingId} />;
+  }
+
+  if (path === '/reset-password') {
+    return <ResetPasswordPage />;
   }
 
   if (path === '/upload') {

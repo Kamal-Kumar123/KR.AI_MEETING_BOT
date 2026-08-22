@@ -9,10 +9,12 @@ from app.schemas.meeting import (
     GoogleLoginRequest,
     LoginRequest,
     RegisterRequest,
+    ResetPasswordRequest,
     TokenResponse,
     UserResponse,
 )
 from app.services.google_auth import verify_google_access_token, verify_google_id_token
+from app.services.password_reset import request_password_reset, reset_password_with_token
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -92,10 +94,28 @@ def logout():
 
 @router.post("/forgot-password")
 def forgot_password(data: ForgotPasswordRequest, db: Session = Depends(get_db)):
-    user = db.query(User).filter(User.email == data.email).first()
-    if user:
-        # SMTP not configured for local demo — acknowledge without revealing if email exists
-        pass
-    return {
-        "message": "If an account exists for this email, password reset instructions will be sent when email is configured."
-    }
+    from app.core.config import settings as cfg
+
+    generic_msg = (
+        "If an account exists for this email with a password, "
+        "reset instructions have been sent."
+    )
+    if not cfg.emailjs_configured():
+        raise HTTPException(
+            status_code=503,
+            detail="Password reset email is not configured on the server. Contact support.",
+        )
+    try:
+        request_password_reset(db, data.email.strip().lower())
+    except RuntimeError as exc:
+        raise HTTPException(status_code=503, detail=str(exc)) from exc
+    return {"message": generic_msg}
+
+
+@router.post("/reset-password", response_model=TokenResponse)
+def reset_password(data: ResetPasswordRequest, db: Session = Depends(get_db)):
+    try:
+        user = reset_password_with_token(db, data.token.strip(), data.password)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    return TokenResponse(access_token=create_access_token(user.id))

@@ -1,9 +1,18 @@
+from pathlib import Path
+
 from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+_API_ROOT = Path(__file__).resolve().parents[2]
+_ENV_FILE = _API_ROOT / ".env"
+
 
 class Settings(BaseSettings):
-    model_config = SettingsConfigDict(env_file=".env", env_file_encoding="utf-8", extra="ignore")
+    model_config = SettingsConfigDict(
+        env_file=str(_ENV_FILE),
+        env_file_encoding="utf-8",
+        extra="ignore",
+    )
 
     env: str = "local"
     # SQLite works without Docker; use PostgreSQL in production (see .env.example)
@@ -41,7 +50,14 @@ class Settings(BaseSettings):
 
     rate_limit: str = "60/minute"
 
-    @field_validator("deepgram_api_key", "gemini_api_key", mode="before")
+    # EmailJS — password reset emails
+    emailjs_service_id: str = ""
+    emailjs_template_id: str = ""
+    emailjs_public_key: str = ""
+    emailjs_private_key: str = ""
+    password_reset_expire_minutes: int = 60
+
+    @field_validator("deepgram_api_key", "gemini_api_key", "emailjs_private_key", mode="before")
     @classmethod
     def strip_api_keys(cls, value):
         return value.strip() if isinstance(value, str) else value
@@ -49,5 +65,21 @@ class Settings(BaseSettings):
     def cors_origins(self) -> list[str]:
         return [o.strip() for o in self.allowed_origins.split(",") if o.strip()]
 
+    def emailjs_configured(self) -> bool:
+        return bool(
+            self.emailjs_service_id.strip()
+            and self.emailjs_template_id.strip()
+            and self.emailjs_public_key.strip()
+        )
 
-settings = Settings()
+
+def get_settings() -> Settings:
+    return Settings()
+
+
+class _SettingsProxy:
+    def __getattr__(self, name: str):
+        return getattr(get_settings(), name)
+
+
+settings = _SettingsProxy()

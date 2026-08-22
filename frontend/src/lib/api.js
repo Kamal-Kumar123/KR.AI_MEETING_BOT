@@ -61,6 +61,16 @@ export async function googleLogin(idToken) {
   return res.data;
 }
 
+export async function forgotPassword(email) {
+  const res = await api.post('/api/v1/auth/forgot-password', { email });
+  return res.data;
+}
+
+export async function resetPassword(token, password) {
+  const res = await api.post('/api/v1/auth/reset-password', { token, password });
+  return res.data;
+}
+
 export async function fetchMeetings() {
   const res = await api.get('/api/v1/meetings');
   return res.data.items || [];

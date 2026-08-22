@@ -60,6 +60,7 @@ def health():
         "gemini": gemini_available(),
         "gemini_model": cfg.gemini_model,
         "deepgram_model": cfg.deepgram_model,
+        "emailjs": cfg.emailjs_configured(),
     }
 
 
